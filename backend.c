@@ -1,5 +1,34 @@
 #include "yodb.h"
 
+typedef struct {
+  Table *table;
+  uint32_t page_num;
+  uint32_t cell_num;
+  bool end_of_table; // Indicates whether the table has a record here or not
+} Cursor;
+
+Cursor *table_start(Table *table);
+Cursor *table_find(Table *table, uint32_t key);
+
+// Returns a pointer which the cursor points.
+void *cursor_value(Cursor *cursor);
+void cursor_advance(Cursor *cursor);
+
+typedef enum {
+  NODE_INTERNAL,
+  NODE_LEAF
+} NodeType;
+
+NodeType *node_type_ptr(void *node);
+
+uint32_t *leaf_node_num_cells_ptr(void *node);
+void *leaf_node_cell(void *node, uint32_t cell_num);
+uint32_t *leaf_node_key_ptr(void *node, uint32_t cell_num);
+void *leaf_node_value_ptr(void *node, uint32_t cell_num);
+void leaf_node_initialize(void *node);
+Cursor *leaf_node_find(Table *table, uint32_t page_num, uint32_t key);
+void leaf_node_insert(Cursor *cursor, uint32_t key, Row *row);
+
 #define size_of_attributes(Struct, Attribute) sizeof(((Struct *)0)->Attribute)
 
 const uint32_t ID_SIZE = size_of_attributes(Row, id);

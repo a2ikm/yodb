@@ -48,37 +48,8 @@ typedef struct {
   uint32_t root_page_num;
 } Table;
 
-typedef struct {
-  Table *table;
-  uint32_t page_num;
-  uint32_t cell_num;
-  bool end_of_table; // Indicates whether the table has a record here or not
-} Cursor;
-
-typedef enum {
-  NODE_INTERNAL,
-  NODE_LEAF
-} NodeType;
-
-NodeType *node_type_ptr(void *node);
-
-uint32_t *leaf_node_num_cells_ptr(void *node);
-void *leaf_node_cell(void *node, uint32_t cell_num);
-uint32_t *leaf_node_key_ptr(void *node, uint32_t cell_num);
-void *leaf_node_value_ptr(void *node, uint32_t cell_num);
-void leaf_node_initialize(void *node);
-Cursor *leaf_node_find(Table *table, uint32_t page_num, uint32_t key);
-void leaf_node_insert(Cursor *cursor, uint32_t key, Row *row);
-
 Table *db_open(const char *filename);
 void db_close(Table *table);
-
-Cursor *table_start(Table *table);
-Cursor *table_find(Table *table, uint32_t key);
-
-// Returns a pointer which the cursor points.
-void *cursor_value(Cursor *cursor);
-void cursor_advance(Cursor *cursor);
 
 typedef enum {
   STATEMENT_INSERT,
@@ -96,8 +67,6 @@ typedef enum {
   EXECUTE_DUPLICATE_KEY
 } ExecuteResult;
 
-ExecuteResult execute_insert(Statement *statement, Table *table);
-ExecuteResult execute_select(Statement *statement, Table *table);
 ExecuteResult execute_statement(Statement *statement, Table *table);
 
 #endif
