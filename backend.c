@@ -117,11 +117,6 @@ Pager *pager_open(const char *filename) {
   pager->file_length = lseek(fd, 0, SEEK_END);
   pager->num_pages = pager->file_length / PAGE_SIZE;
 
-  if (pager->file_length % PAGE_SIZE != 0) {
-    printf("Corrupted file.\n");
-    exit(EXIT_FAILURE);
-  }
-
   for (uint32_t i = 0; i < TABLE_MAX_PAGES; i++) {
     pager->pages[i] = NULL;
   }
@@ -155,27 +150,30 @@ void *get_page(Pager *pager, uint32_t page_num) {
   }
 
   if (pager->pages[page_num] == NULL) {
-    void *page = malloc(PAGE_SIZE);
-
-    uint32_t num_pages = pager->file_length / PAGE_SIZE;
-    if (pager->file_length % PAGE_SIZE > 0) {
-      num_pages += 1;
+    if (page_num > pager->num_pages) {
+      // We assume that page_num is less than or equal to num_pages.
+      // Otherwise it can read uninitialized pages from the file.
+      // For example, if we pass page_num as 1 when num_pages is 0, it initializes
+      // the a page at 1, and increments num_pages to 1. Then, if we pass page_num as 0
+      // which goes with page_num < num_pages, it will read an uninitialized page at 0 from the file.
+      printf("Reading uninitialized page at %d. num_pages=%d\n", page_num, pager->num_pages);
+      exit(EXIT_FAILURE);
     }
 
-    if (page_num <= num_pages) {
+    void *page = malloc(PAGE_SIZE);
+
+    if (page_num < pager->num_pages) {
       lseek(pager->file_descriptor, page_num * PAGE_SIZE, SEEK_SET);
       ssize_t bytes_read = read(pager->file_descriptor, page, PAGE_SIZE);
       if (bytes_read == -1) {
         printf("Error reading file: %d\n", errno);
         exit(EXIT_FAILURE);
       }
+    } else {
+      pager->num_pages += 1;
     }
 
     pager->pages[page_num] = page;
-
-    if (page_num >= pager->num_pages) {
-      pager->num_pages = page_num + 1;
-    }
   }
 
   return pager->pages[page_num];
