@@ -247,6 +247,7 @@ void leaf_node_insert(Cursor *cursor, uint32_t key, Row *row) {
   }
 
   if (cursor->cell_num < num_cells) {
+    // Shift cells in ((cursor->cell_num)..(num_cells - 1)) to ((cursor->cell_num + 1)..(num_cells))
     for (uint32_t i = num_cells; i > cursor->cell_num; i--) {
       memcpy(leaf_node_cell(node, i), leaf_node_cell(node, i - 1), LEAF_NODE_CELL_SIZE);
     }
