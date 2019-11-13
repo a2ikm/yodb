@@ -214,18 +214,22 @@ Cursor *leaf_node_find(Table *table, uint32_t page_num, uint32_t key) {
   cursor->table = table;
   cursor->page_num = page_num;
 
+  if (num_cells == 0) {
+    cursor->cell_num = 0;
+    return cursor;
+  }
+
   // Binary search
   uint32_t min_index = 0;
-  uint32_t one_past_max_index = num_cells;
-  while (one_past_max_index != min_index) {
-    uint32_t index = (min_index + one_past_max_index) / 2;
+  uint32_t max_index = num_cells - 1;
+  while (max_index > min_index) {
+    uint32_t index = (min_index + max_index) / 2;
     uint32_t key_at_index = *leaf_node_key_ptr(node, index);
     if (key == key_at_index) {
       cursor->cell_num = index;
       return cursor;
-    }
-    if (key < key_at_index) {
-      one_past_max_index = index;
+    } else if (key < key_at_index) {
+      max_index = index - 1;
     } else {
       min_index = index + 1;
     }
